@@ -22,35 +22,36 @@ type File struct {
 	*ini.File
 }
 
-func (f *File) String(section, key string) string {
+func (f *File) GetString(section, key string) string {
 	result := f.Section(section).Key(key).String()
 	if len(result) == 0 {
 		panic(errors.ErrNoData.As(section, key))
 	}
 	return result
 }
-func (f *File) Float64(section, key string) float64 {
+
+func (f *File) GetFloat64(section, key string) float64 {
 	result, err := f.Section(section).Key(key).Float64()
 	if err != nil {
 		panic(errors.As(err, section, key))
 	}
 	return result
 }
-func (f *File) Int64(section, key string) int64 {
+func (f *File) GetInt64(section, key string) int64 {
 	result, err := f.Section(section).Key(key).Int64()
 	if err != nil {
 		panic(errors.As(err, section, key))
 	}
 	return result
 }
-func (f *File) Uint64(section, key string) uint64 {
+func (f *File) GetUint64(section, key string) uint64 {
 	result, err := f.Section(section).Key(key).Uint64()
 	if err != nil {
 		panic(errors.As(err, section, key))
 	}
 	return result
 }
-func (f *File) Bool(section, key string) bool {
+func (f *File) GetBool(section, key string) bool {
 	result, err := f.Section(section).Key(key).Bool()
 	if err != nil {
 		panic(errors.As(err, section, key))
