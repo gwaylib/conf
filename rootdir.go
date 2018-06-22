@@ -2,16 +2,23 @@ package conf
 
 import (
 	"os"
+	"path/filepath"
 )
 
 func RootDir() string {
-	dir := os.Getenv("PJ_ROOT")
+	dir := os.Getenv("GOSPACE")
 	if len(dir) == 0 {
-		panic("Need PJ_ROOT environment for project directory")
+		// Compatible the old version
+		dir = os.Getenv("PJ_ROOT")
 	}
 
-	if dir[len(dir)-1:] == "/" {
-		return dir[len(dir)-1:]
+	if len(dir) == 0 {
+		panic("Need GOSPACE environment for project directory")
 	}
-	return dir
+
+	p, err := filepath.Abs(dir)
+	if err != nil {
+		panic(err)
+	}
+	return p
 }
