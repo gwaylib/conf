@@ -8,8 +8,8 @@ export PJ_ROOT=$HOME/ws/go_project
 package db
 
 import (
-	"github.com/CodeInEverest/golib/conf"
-	"github.com/CodeInEverest/golib/database"
+	"github.com/gwaylib/conf"
+	"github.com//gwaylib/database"
 	_ "github.com/go-sql-driver/mysql"
 )
 

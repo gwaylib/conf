@@ -3,7 +3,7 @@ package test
 import (
 	"testing"
 
-	"github.com/gwaylib/datastore/conf/ini"
+	"github.com/gwaylib/conf/ini"
 )
 
 func TestEtc(t *testing.T) {
