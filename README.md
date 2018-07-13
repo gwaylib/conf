@@ -1,7 +1,7 @@
 # 使用说明
 
 在shell中导入环境变量
-export GOSPACE=$HOME/ws/go_project
+export PRJ_ROOT=$HOME/ws/go_project
 
 使用ini包读取配置文件数据
 ``` text
