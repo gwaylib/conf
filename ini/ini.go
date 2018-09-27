@@ -23,8 +23,9 @@ type File struct {
 }
 
 func (f *File) String(section, key string) string {
-	result := f.Section(section).Key(key).String()
-	if len(result) == 0 {
+	s := f.Section(section)
+	result := s.Key(key).String()
+	if len(result) == 0 && !s.HasKey(key) {
 		panic(errors.ErrNoData.As(section, key))
 	}
 	return result
