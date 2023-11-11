@@ -2,7 +2,7 @@
 
 Export the env to the shell
 ```shell
-export PRJ_ROOT=$HOME/ws/go_project
+export PRJ_ROOT=$HOME/ws/test
 ```
 
 Example for `RootDir`
@@ -27,6 +27,15 @@ func HasDB(section string) (*qsql.DB, error) {
 ```
 
 Example for ini read
+
+example $HOME/ws/test/etc/etc.ini
+```
+[test]
+str: abc
+```
+
+```shell
+
 ```golang
 package db
 
@@ -36,14 +45,9 @@ import (
 )
 
 func main() {
-    //
-    // etc.cfg example
-    // [test]
-    // str: abc
-    //
-    path := conf.RootDir() + "/etc/etc.cfg"
-    cfg := ini.NewIni(path)
-    str := cfg.String("test", "str")
+    path := conf.RootDir() + "/etc/"
+    etc := ini.NewIni(path).Get("etc.ini")
+    str := etc.String("test", "str")
     if str != "abc" {
         panic("expect abc, but : " + str)
     }

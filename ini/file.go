@@ -1,32 +1,11 @@
 package ini
 
 import (
-	"strings"
-	"sync"
 	"time"
 
 	"github.com/go-ini/ini"
 	"github.com/gwaylib/errors"
 )
-
-var cache = sync.Map{}
-
-func GetFile(fileName string) (*File, error) {
-	f, ok := cache.Load(fileName)
-	if ok {
-		return f.(*File), nil
-	}
-	file, err := ini.Load(fileName)
-	if err != nil {
-		if strings.Index(err.Error(), "no such file or directory") > -1 {
-			return nil, errors.ErrNoData.As(err, fileName)
-		}
-		return nil, err
-	}
-	ff := &File{file}
-	cache.Store(fileName, ff)
-	return ff, nil
-}
 
 type File struct {
 	*ini.File
