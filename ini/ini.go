@@ -1,6 +1,9 @@
+// read ini from file
 package ini
 
 import (
+	"path/filepath"
+
 	"github.com/gwaylib/errors"
 )
 
@@ -19,18 +22,24 @@ func NewIni(rootPath string) *Ini {
 }
 
 func (ini *Ini) GetFile(subFileName string) *File {
-	file, err := GetFile(ini.rootPath + subFileName)
+	filePath := filepath.Join(ini.rootPath, subFileName)
+	file, err := GetFile(filePath)
 	if err != nil {
-		panic(errors.As(err, ini.rootPath+subFileName))
+		panic(errors.As(err, filePath))
 	}
 	return file
 }
 
 func (ini *Ini) GetDefaultFile(subFileName, subDefaultFileName string) *File {
-	f, err := GetFile(ini.rootPath + subFileName)
+	if len(subFileName) == 0 {
+		return ini.GetFile(subDefaultFileName)
+	}
+
+	filePath := filepath.Join(ini.rootPath, subFileName)
+	f, err := GetFile(filePath)
 	if err != nil {
 		if !errors.ErrNoData.Equal(err) {
-			panic(errors.As(err, ini.rootPath+subFileName))
+			panic(errors.As(err, filePath))
 		}
 		return ini.GetFile(subDefaultFileName)
 	}

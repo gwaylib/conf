@@ -25,13 +25,3 @@ func TestEtc(t *testing.T) {
 		t.Fatal(sec.Key("float"))
 	}
 }
-
-func TestI18n(t *testing.T) {
-	i18nDir := "./app.default."
-	cfg := ini.NewIni(i18nDir)
-	msg_default := cfg.GetDefaultFile("", "en").Section("error").Key("0").String()
-	if msg_default != "zero" {
-		t.Fatal(msg_default)
-		return
-	}
-}

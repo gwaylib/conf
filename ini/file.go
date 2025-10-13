@@ -1,3 +1,4 @@
+// read ini directly from file
 package ini
 
 import (
