@@ -1,14 +1,27 @@
 package ini
 
 import (
+	"os"
 	"time"
 
-	"github.com/go-ini/ini"
+	goini "github.com/go-ini/ini"
 	"github.com/gwaylib/errors"
 )
 
 type File struct {
-	*ini.File
+	*goini.File
+}
+
+func GetFile(fileName string) (*File, error) {
+	file, err := goini.Load(fileName)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, errors.ErrNoData.As(err, fileName)
+		}
+		return nil, err
+	}
+	ff := &File{file}
+	return ff, nil
 }
 
 func (f *File) String(section, key string) string {
