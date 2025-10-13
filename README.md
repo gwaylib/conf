@@ -10,12 +10,14 @@ Example for `RootDir`
 package db
 
 import (
+    "os/filepath"
+
 	"github.com/gwaylib/conf"
 	"github.com//gwaylib/qsql"
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var dbFile = conf.RootDir() + "/etc/db.cfg"
+var dbFile = filepath.Join(conf.RootDir(),  "etc/db.cfg")
 
 func DB(section string) *qsql.DB {
 	return qsql.CacheDB(dbFile, section)
@@ -46,7 +48,7 @@ import (
 
 func main() {
     path := conf.RootDir() + "/etc/"
-    etc := ini.NewIni(path).Get("etc.ini")
+    etc := ini.NewIni(path).GetFile("etc.ini")
     str := etc.String("test", "str")
     if str != "abc" {
         panic("expect abc, but : " + str)

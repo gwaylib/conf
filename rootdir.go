@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 )
 
-func RootDir() string {
+func envRoot() string {
 	dir := os.Getenv("PRJ_ROOT")
 	if len(dir) == 0 {
 		// Compatible the old version
@@ -21,4 +21,19 @@ func RootDir() string {
 		panic(err)
 	}
 	return p
+}
+
+var (
+	rootDir = ""
+)
+
+func InitRootDir(path string) {
+	rootDir = path
+}
+
+func RootDir() string {
+	if len(rootDir) == 0 {
+		rootDir = envRoot()
+	}
+	return rootDir
 }
