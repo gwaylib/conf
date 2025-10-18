@@ -9,10 +9,16 @@ import (
 func TestI18n(t *testing.T) {
 	i18nDir := "./"
 	cfg := ini.NewIniCache(i18nDir)
-	// if the language file is not exist, read the default file
-	msg_default := cfg.GetDefaultFile("", "app.default.en").String("error", "0")
-	if msg_default != "zero" {
-		t.Fatal(msg_default)
+	// if the language file is not exist, load the default file
+	val := cfg.GetDefaultFile("", "app.lang.en").String("error", "0")
+	if val != "zero" {
+		t.Fatal(val)
+		return
+	}
+
+	val = cfg.GetDefaultFile("app.lang.zh_cn", "app.lang.en").String("error", "0")
+	if val != "零" {
+		t.Fatal(val)
 		return
 	}
 }

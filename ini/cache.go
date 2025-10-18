@@ -17,6 +17,11 @@ func NewIniCache(rootPath string) *IniCache {
 	return &IniCache{rootPath: rootPath}
 }
 
+func (ini *IniCache) DelCache(subFileName string) {
+	filePath := filepath.Join(ini.rootPath, subFileName)
+	ini.cache.Delete(filePath)
+}
+
 func (ini *IniCache) GetFile(subFileName string) *File {
 	filePath := filepath.Join(ini.rootPath, subFileName)
 
