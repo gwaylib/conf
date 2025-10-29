@@ -16,7 +16,7 @@ type CacheFile struct {
 }
 
 func (c *CacheFile) IsTimeout(now time.Time) bool {
-	return c.EndedAt.After(now)
+	return c.EndedAt.Before(now)
 }
 
 type IniCache struct {
