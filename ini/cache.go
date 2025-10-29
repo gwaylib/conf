@@ -2,6 +2,7 @@
 package ini
 
 import (
+	"context"
 	"path/filepath"
 	"sync"
 	"time"
@@ -36,9 +37,13 @@ func NewTimeoutIniCache(rootPath string, timeout time.Duration) *IniCache {
 		readSignal: make(chan string, 200), // buffer for 200 concurrency
 	}
 	go func() {
+		ctx := context.Background()
 		for {
-			filePath := <-i.readSignal
-			i.load(filePath)
+			select {
+			case filePath := <-i.readSignal:
+				i.load(filePath)
+			case <-ctx.Done():
+			}
 		}
 	}()
 	return i
