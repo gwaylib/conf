@@ -11,6 +11,7 @@ import (
 
 type CacheFile struct {
 	File    *File
+	Error   error
 	EndedAt time.Time
 }
 
@@ -49,22 +50,16 @@ func (ini *IniCache) getFile(subFileName string) (*File, error) {
 	if ok {
 		cacheFile := storeFile.(*CacheFile)
 		if !cacheFile.IsTimeout(time.Now()) {
-			return cacheFile.File, nil
-		}
-		file, err = GetFile(filePath)
-		if err != nil {
-			println(errors.As(err, filePath))
-			return cacheFile.File, nil
-		}
-	} else {
-		file, err = GetFile(filePath)
-		if err != nil {
-			return nil, errors.As(err, filePath)
+			return cacheFile.File, cacheFile.Error
 		}
 	}
 
-	ini.cache.Store(filePath, &CacheFile{File: file, EndedAt: time.Now().Add(ini.cacheOut)})
-	return file, nil
+	file, err = GetFile(filePath)
+	if err != nil {
+		err = errors.As(err, filePath)
+	}
+	ini.cache.Store(filePath, &CacheFile{File: file, Error: err, EndedAt: time.Now().Add(ini.cacheOut)})
+	return file, err
 
 }
 
