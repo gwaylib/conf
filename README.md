@@ -28,16 +28,7 @@ func HasDB(section string) (*qsql.DB, error) {
 }
 ```
 
-Example for ini read
-
-example $HOME/ws/test/etc/etc.ini
-```
-[test]
-str: abc
-```
-
-```shell
-
+For realtime ini read
 ```golang
 package db
 
@@ -47,11 +38,31 @@ import (
 )
 
 func main() {
-    path := conf.RootDir() + "/etc/"
-    etc := ini.NewIni(path).GetFile("etc.ini")
+    etcRoot := filepath.Join(conf.RootDir(), "etc")
+    etc := ini.NewIni(etcRoot).GetFile("etc.ini") // read disk file every times.
     str := etc.String("test", "str")
     if str != "abc" {
         panic("expect abc, but : " + str)
     }
 }
 ```
+
+For memory cache ini read
+```
+package db
+
+import (
+	"github.com/gwaylib/conf"
+	"github.com/gwaylib/conf/ini"
+)
+
+func main() {
+    etcRoot := filepath.Join(conf.RootDir(), "etc")
+    etcCache := ini.NewCacheIni(etcRoot).GetFile("etc.ini") // the cache should reload when loaded after 5*time.Minute
+    str := etc.String("test", "str")
+    if str != "abc" {
+        panic("expect abc, but : " + str)
+    }
+}
+```
+
