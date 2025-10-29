@@ -69,7 +69,11 @@ func (ini *IniCache) getFile(subFileName string) (*File, error) {
 }
 
 func (ini *IniCache) GetFile(subFileName string) *File {
-	return ini.GetFile(subFileName)
+	file, err := ini.getFile(subFileName)
+	if err != nil {
+		panic(errors.As(err))
+	}
+	return file
 }
 
 func (ini *IniCache) GetDefaultFile(subFileName, subDefaultFileName string) *File {
