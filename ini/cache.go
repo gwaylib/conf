@@ -2,7 +2,6 @@
 package ini
 
 import (
-	"log"
 	"path/filepath"
 	"sync"
 	"time"
@@ -23,8 +22,9 @@ func (c *cacheFile) IsTimeout(now time.Time) bool {
 type IniCache struct {
 	rootPath   string
 	cache      sync.Map
-	cacheOut   time.Duration
+	timeout    time.Duration
 	readSignal chan string
+	loadLk     sync.Mutex
 }
 
 // rootPath -- point out the etc directory
@@ -32,35 +32,45 @@ type IniCache struct {
 func NewTimeoutIniCache(rootPath string, timeout time.Duration) *IniCache {
 	i := &IniCache{
 		rootPath:   rootPath,
-		cacheOut:   timeout,
+		timeout:    timeout,
 		readSignal: make(chan string, 200), // buffer for 200 concurrency
 	}
-	go i.read()
+	go func() {
+		for {
+			filePath := <-i.readSignal
+			i.load(filePath)
+		}
+	}()
 	return i
 }
 
 func NewIniCache(rootPath string) *IniCache {
-	return NewTimeoutIniCache(rootPath, 5*time.Minute)
+	return NewTimeoutIniCache(rootPath, 0)
 }
 
-func (ini *IniCache) read() {
-	for {
-		filePath := <-ini.readSignal
-		storeFile, ok := ini.cache.Load(filePath)
-		if ok {
-			cache := storeFile.(*cacheFile)
-			if !cache.IsTimeout(time.Now()) {
-				return
-			}
-		}
+func (ini *IniCache) load(filePath string) (*File, error) {
+	ini.loadLk.Lock()
+	defer ini.loadLk.Unlock()
 
-		file, err := GetFile(filePath)
-		if err != nil {
-			log.Println(errors.As(err, filePath))
-			return
+	storeFile, ok := ini.cache.Load(filePath)
+	if ok {
+		cache := storeFile.(*cacheFile)
+		if !cache.IsTimeout(time.Now()) {
+			return cache.File, cache.Error
 		}
-		ini.cache.Store(filePath, &cacheFile{File: file, Error: err, EndedAt: time.Now().Add(ini.cacheOut)})
 	}
+
+	file, err := GetFile(filePath)
+	if err != nil {
+		err = errors.As(err, filePath)
+	}
+	endedAt := time.Now().Add(ini.timeout)
+	if ini.timeout == 0 {
+		endedAt = time.Date(9999, 12, 31, 24, 0, 0, 0, time.Local)
+	}
+	ini.cache.Store(filePath, &cacheFile{File: file, Error: err, EndedAt: endedAt})
+	return file, err
+
 }
 
 func (ini *IniCache) DelCache(subFileName string) {
@@ -71,9 +81,6 @@ func (ini *IniCache) DelCache(subFileName string) {
 func (ini *IniCache) getFile(subFileName string) (*File, error) {
 	filePath := filepath.Join(ini.rootPath, subFileName)
 
-	var file *File
-	var err error
-
 	storeFile, ok := ini.cache.Load(filePath)
 	if ok {
 		cache := storeFile.(*cacheFile)
@@ -83,13 +90,8 @@ func (ini *IniCache) getFile(subFileName string) (*File, error) {
 		return cache.File, cache.Error
 	}
 
-	// first time for read
-	file, err = GetFile(filePath)
-	if err != nil {
-		err = errors.As(err, filePath)
-	}
-	ini.cache.Store(filePath, &cacheFile{File: file, Error: err, EndedAt: time.Now().Add(ini.cacheOut)})
-	return file, err
+	// read first time
+	return ini.load(filePath)
 }
 
 func (ini *IniCache) GetFile(subFileName string) *File {

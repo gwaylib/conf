@@ -58,7 +58,8 @@ import (
 
 func main() {
     etcRoot := filepath.Join(conf.RootDir(), "etc")
-    etcCache := ini.NewCacheIni(etcRoot).GetFile("etc.ini") // the cache should reload when loaded after 5*time.Minute
+    // etcCache := ini.NewTimeoutIniCache(etcRoot, 5 * time.Munite) // the cache should reload when loaded after 5*time.Minute
+    etcCache := ini.NewCacheIni(etcRoot).GetFile("etc.ini")
     str := etc.String("test", "str")
     if str != "abc" {
         panic("expect abc, but : " + str)
