@@ -2,6 +2,7 @@
 package ini
 
 import (
+	"log"
 	"path/filepath"
 	"sync"
 	"time"
@@ -9,30 +10,57 @@ import (
 	"github.com/gwaylib/errors"
 )
 
-type CacheFile struct {
+type cacheFile struct {
 	File    *File
 	Error   error
 	EndedAt time.Time
 }
 
-func (c *CacheFile) IsTimeout(now time.Time) bool {
+func (c *cacheFile) IsTimeout(now time.Time) bool {
 	return c.EndedAt.Before(now)
 }
 
 type IniCache struct {
-	rootPath string
-	cache    sync.Map
-	cacheOut time.Duration
+	rootPath   string
+	cache      sync.Map
+	cacheOut   time.Duration
+	readSignal chan string
 }
 
 // rootPath -- point out the etc directory
 // timeout -- reread init file afeter timeout
 func NewTimeoutIniCache(rootPath string, timeout time.Duration) *IniCache {
-	return &IniCache{rootPath: rootPath, cacheOut: timeout}
+	i := &IniCache{
+		rootPath:   rootPath,
+		cacheOut:   timeout,
+		readSignal: make(chan string, 200), // buffer for 200 concurrency
+	}
+	go i.read()
+	return i
 }
 
 func NewIniCache(rootPath string) *IniCache {
 	return NewTimeoutIniCache(rootPath, 5*time.Minute)
+}
+
+func (ini *IniCache) read() {
+	for {
+		filePath := <-ini.readSignal
+		storeFile, ok := ini.cache.Load(filePath)
+		if ok {
+			cache := storeFile.(*cacheFile)
+			if !cache.IsTimeout(time.Now()) {
+				return
+			}
+		}
+
+		file, err := GetFile(filePath)
+		if err != nil {
+			log.Println(errors.As(err, filePath))
+			return
+		}
+		ini.cache.Store(filePath, &cacheFile{File: file, Error: err, EndedAt: time.Now().Add(ini.cacheOut)})
+	}
 }
 
 func (ini *IniCache) DelCache(subFileName string) {
@@ -48,19 +76,20 @@ func (ini *IniCache) getFile(subFileName string) (*File, error) {
 
 	storeFile, ok := ini.cache.Load(filePath)
 	if ok {
-		cacheFile := storeFile.(*CacheFile)
-		if !cacheFile.IsTimeout(time.Now()) {
-			return cacheFile.File, cacheFile.Error
+		cache := storeFile.(*cacheFile)
+		if cache.IsTimeout(time.Now()) {
+			ini.readSignal <- filePath
 		}
+		return cache.File, cache.Error
 	}
 
+	// first time for read
 	file, err = GetFile(filePath)
 	if err != nil {
 		err = errors.As(err, filePath)
 	}
-	ini.cache.Store(filePath, &CacheFile{File: file, Error: err, EndedAt: time.Now().Add(ini.cacheOut)})
+	ini.cache.Store(filePath, &cacheFile{File: file, Error: err, EndedAt: time.Now().Add(ini.cacheOut)})
 	return file, err
-
 }
 
 func (ini *IniCache) GetFile(subFileName string) *File {
