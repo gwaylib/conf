@@ -78,9 +78,23 @@ func (ini *IniCache) load(filePath string) (*File, error) {
 
 }
 
+func (ini *IniCache) Reload(subFileName string) {
+	filePath := filepath.Join(ini.rootPath, subFileName)
+	storeFile, ok := ini.cache.Load(filePath)
+	if ok {
+		storeFile.(*cacheFile).EndedAt = time.Now()
+		ini.cache.Store(filePath, storeFile)
+	}
+	ini.readSignal <- filePath
+}
+
 func (ini *IniCache) DelCache(subFileName string) {
 	filePath := filepath.Join(ini.rootPath, subFileName)
 	ini.cache.Delete(filePath)
+}
+
+func (ini *IniCache) ClearCache() {
+	ini.cache.Clear()
 }
 
 func (ini *IniCache) getFile(subFileName string) (*File, error) {
