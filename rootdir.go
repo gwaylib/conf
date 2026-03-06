@@ -23,6 +23,19 @@ func envRoot() string {
 	return p
 }
 
+func envEtc() string {
+	dir := os.Getenv("ETC_ROOT")
+	if len(dir) == 0 {
+		return envRoot()
+	}
+
+	p, err := filepath.Abs(dir)
+	if err != nil {
+		panic(err)
+	}
+	return p
+}
+
 var (
 	rootDir = ""
 )
@@ -31,9 +44,15 @@ func InitRootDir(path string) {
 	rootDir = path
 }
 
+// project root path
 func RootDir() string {
 	if len(rootDir) == 0 {
 		rootDir = envRoot()
 	}
 	return rootDir
+}
+
+// project root for etc, if not set, return then project root path
+func EtcDir() string {
+	return envEtc()
 }
