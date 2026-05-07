@@ -16,11 +16,7 @@ func envRoot() string {
 		panic("Need PRJ_ROOT environment for project directory")
 	}
 
-	p, err := filepath.Abs(dir)
-	if err != nil {
-		panic(err)
-	}
-	return p
+	return dir
 }
 
 func envEtc() string {
