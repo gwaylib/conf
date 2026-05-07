@@ -9,20 +9,20 @@ import (
 
 // 用于省略前缀长路径写法
 // 例如,以下可用于多语言处理：
-// ini := NewIni(conf.RootDir()+"/app.default)
+// ini := NewIni(filepath.Join(conf.EtcDir(), "app.default")
 // lang := ".zh_cn"
 // cfg := ini.GetFile(lang)
 // cfg.String("msg", "1001")
 type Ini struct {
-	rootPath string
+	etcPath string
 }
 
-func NewIni(rootPath string) *Ini {
-	return &Ini{rootPath}
+func NewIni(etcPath string) *Ini {
+	return &Ini{etcPath}
 }
 
 func (ini *Ini) GetFile(subFileName string) *File {
-	filePath := filepath.Join(ini.rootPath, subFileName)
+	filePath := filepath.Join(ini.etcPath, subFileName)
 	file, err := GetFile(filePath)
 	if err != nil {
 		panic(errors.As(err, filePath))
@@ -35,7 +35,7 @@ func (ini *Ini) GetDefaultFile(subFileName, subDefaultFileName string) *File {
 		return ini.GetFile(subDefaultFileName)
 	}
 
-	filePath := filepath.Join(ini.rootPath, subFileName)
+	filePath := filepath.Join(ini.etcPath, subFileName)
 	f, err := GetFile(filePath)
 	if err != nil {
 		if !errors.ErrNoData.Equal(err) {

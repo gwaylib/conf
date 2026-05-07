@@ -21,18 +21,18 @@ func (c *cacheFile) IsTimeout(now time.Time) bool {
 }
 
 type IniCache struct {
-	rootPath   string
+	etcPath    string
 	cache      sync.Map
 	timeout    time.Duration
 	readSignal chan string
 	loadLk     sync.Mutex
 }
 
-// rootPath -- point out the etc directory
+// etcPath -- point out the etc directory
 // timeout -- reread init file afeter timeout
-func NewTimeoutIniCache(rootPath string, timeout time.Duration) *IniCache {
+func NewTimeoutIniCache(etcRoot string, timeout time.Duration) *IniCache {
 	i := &IniCache{
-		rootPath:   rootPath,
+		etcPath:    etcRoot,
 		timeout:    timeout,
 		readSignal: make(chan string, 200), // buffer for 200 concurrency
 	}
@@ -43,6 +43,7 @@ func NewTimeoutIniCache(rootPath string, timeout time.Duration) *IniCache {
 			case filePath := <-i.readSignal:
 				i.load(filePath)
 			case <-ctx.Done():
+				return
 			}
 		}
 	}()
@@ -79,7 +80,7 @@ func (ini *IniCache) load(filePath string) (*File, error) {
 }
 
 func (ini *IniCache) Reload(subFileName string) {
-	filePath := filepath.Join(ini.rootPath, subFileName)
+	filePath := filepath.Join(ini.etcPath, subFileName)
 	storeFile, ok := ini.cache.Load(filePath)
 	if ok {
 		storeFile.(*cacheFile).EndedAt = time.Now()
@@ -89,7 +90,7 @@ func (ini *IniCache) Reload(subFileName string) {
 }
 
 func (ini *IniCache) DelCache(subFileName string) {
-	filePath := filepath.Join(ini.rootPath, subFileName)
+	filePath := filepath.Join(ini.etcPath, subFileName)
 	ini.cache.Delete(filePath)
 }
 
@@ -98,7 +99,7 @@ func (ini *IniCache) ClearCache() {
 }
 
 func (ini *IniCache) getFile(subFileName string) (*File, error) {
-	filePath := filepath.Join(ini.rootPath, subFileName)
+	filePath := filepath.Join(ini.etcPath, subFileName)
 
 	storeFile, ok := ini.cache.Load(filePath)
 	if ok {

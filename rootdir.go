@@ -15,8 +15,11 @@ func envRoot() string {
 	if len(dir) == 0 {
 		panic("Need PRJ_ROOT environment for project directory")
 	}
-
-	return dir
+	p, err := filepath.Abs(dir)
+	if err != nil {
+		panic(err)
+	}
+	return p
 }
 
 func envEtc() string {
@@ -24,7 +27,11 @@ func envEtc() string {
 	if len(dir) == 0 {
 		return filepath.Join(envRoot(), "etc")
 	}
-	return dir
+	p, err := filepath.Abs(dir)
+	if err != nil {
+		panic(err)
+	}
+	return p
 }
 
 var (
